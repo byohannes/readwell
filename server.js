@@ -69,17 +69,76 @@ app.delete('/api/books/:id', function (request, response) {
 
     if (mongodb.ObjectID.isValid(newId)) {
       id = new mongodb.ObjectID(newId)
-      collection.deleteOne({_id:id}, function (error, result) {
+      collection.deleteOne({_id: id}, function (error, result) {
         if (error) {
           response.status(500).send(error)
         } else if (result.deletedCount) {
-          response.sendStatus(204);
+          response.sendStatus(204)
         } else {
           response.sendStatus(404)
         }
 
         client.close()
       })
+    }
+  })
+})
+
+app.put('/api/books/:id', function (request, response) {
+  const client = new mongodb.MongoClient(uri)
+  client.connect(() => {
+    const db = client.db('literature')
+    const collection = db.collection('books')
+    const {id} = request.params
+    const title = request.body.title?request.body.title:null;
+    const author = request.body.author
+    const author_birth_year = request.body.author_birth_year
+    const author_death_year = request.body.author_death_year
+    const url = request.body.url
+
+    let newId
+    if (mongodb.ObjectID.isValid(id)) {
+      newId = new mongodb.ObjectID(id)
+      const searchObject = {
+        _id: newId,
+      }
+      const updateObject = {
+        $set: {
+          title: title,
+          author: author,
+          author_birth_year: author_birth_year,
+          author_death_year: author_death_year,
+          url: url,
+        },
+      }
+      const options = {returnOriginal: false}
+      if (
+        (title || author || author_birth_year || url || author_death_year) &&
+        newId
+      ) {
+        collection.findOneAndUpdate(
+          searchObject,
+          updateObject,
+          options,
+          (error, result) => {
+            if (error) {
+              response.send(error)
+              client.close()
+            } else {
+              response.send(result.value)
+              client.close()
+            }
+          }
+        )
+      } else {
+        response.send(
+          'Error! please check your data'
+        )
+        client.close()
+      }
+    } else {
+      response.status(400).send('Sorry something went wrong!')
+      client.close()
     }
   })
 })
