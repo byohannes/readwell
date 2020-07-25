@@ -1,6 +1,5 @@
 const express = require('express')
 const mongodb = require('mongodb')
-const {query} = require('express')
 require('dotenv').config()
 const uri = process.env.URI
 const app = express()
@@ -15,7 +14,12 @@ app.get('/', function (request, response) {
     const db = client.db('literature')
     const collection = db.collection('books')
     collection.find().toArray((err, result) => {
-      response.send(err || result)
+      if (error) {
+        response.status(500).send(error)
+      } else {
+        response.send(result.ops[0])
+      }
+
       client.close()
     })
   })
@@ -51,6 +55,32 @@ app.post('/api/books', function (request, response) {
       response.send(err || result.ops[0])
       client.close()
     })
+  })
+})
+
+app.delete('/api/books/:id', function (request, response) {
+  const client = new mongodb.MongoClient(uri)
+
+  client.connect(function () {
+    const db = client.db('literature')
+    const collection = db.collection('books')
+    let id = undefined
+    const newId = request.params.id
+
+    if (mongodb.ObjectID.isValid(newId)) {
+      id = new mongodb.ObjectID(newId)
+      collection.deleteOne({_id:id}, function (error, result) {
+        if (error) {
+          response.status(500).send(error)
+        } else if (result.deletedCount) {
+          response.sendStatus(204);
+        } else {
+          response.sendStatus(404)
+        }
+
+        client.close()
+      })
+    }
   })
 })
 
