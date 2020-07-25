@@ -1,0 +1,66 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Readwell</title>
+    <style>
+      body {
+        font-family: Georgia, serif;
+        margin: auto;
+        max-width: 400px;
+        text-align: center;
+      }
+
+      form {
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        text-align: center;
+      }
+      
+      .text-input {
+        display: block;
+        margin: 0 auto 20px;
+      }
+    </style>
+  </head>
+  
+  <body>
+    <h1>New book</h1>
+
+    <form action="javascript:void(0);" onsubmit="add()">
+      <input class="text-input" id="title" placeholder="Title" required>
+      <input class="text-input" id="author" placeholder="Author" required>
+      <input class="text-input" id="author_birth_year" placeholder="Author birth year" required>
+      <input class="text-input" id="author_death_year" placeholder="Author death year" required>
+      <input class="text-input" id="url" placeholder="URL" required>
+      <input type="submit">
+    </form>
+
+    <a href="/">&lt; Back</a>
+    
+    <script>
+      function add() {
+        let queryString = '?'
+
+        for (const id of ['title', 'author', 'author_birth_year', 'author_death_year', 'url']) {
+          const node = document.getElementById(id)
+          
+          if (node.value) {
+            queryString = `${queryString}&${id}=${encodeURIComponent(node.value)}`
+          }
+        }
+
+        fetch(`/api/books${queryString}`, { method: 'POST' })
+          .then(response => response.json())
+          .then(book => {
+            alert('✅ Book added!')
+            location.href = '/books/' + book._id
+          })
+          .catch(() => alert(`⛔️ Error`))
+      }
+    </script>
+  </body>
+</html>

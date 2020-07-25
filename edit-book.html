@@ -1,0 +1,95 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Readwell</title>
+    <style>
+      body {
+        font-family: Georgia, serif;
+        margin: auto;
+        max-width: 400px;
+        text-align: center;
+      }
+
+      form {
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        text-align: center;
+      }
+      
+      .text-input {
+        display: block;
+        margin: 0 auto 20px;
+      }
+    </style>
+  </head>
+  
+  <body>
+    <h1>Edit book</h1>
+
+    <form action="javascript:void(0);" onsubmit="update()">
+      <input class="text-input" id="title" placeholder="Title">
+      <input class="text-input" id="author" placeholder="Author">
+      <input class="text-input" id="author_birth_year" placeholder="Author birth year">
+      <input class="text-input" id="author_death_year" placeholder="Author death year">
+      <input class="text-input" id="url" placeholder="URL">
+      <input type="submit">
+    </form>
+
+    <a id="back-link">&lt; Back</a>
+    
+    <script>
+      const url = location.href
+      const urlParts = url.split('/')
+      const bookID = urlParts[urlParts.length - 2]
+
+      const backPath = `/books/${bookID}`
+
+      const backLinkNode = document.getElementById('back-link')
+      backLinkNode.href = backPath
+
+      function update() {
+        const requestBody = { _id: bookID }
+
+        const fieldIDs = ['title', 'author', 'author_birth_year', 'author_death_year', 'url']
+        const numberFieldIDs = ['author_birth_year', 'author_death_year']
+
+        for (const id of fieldIDs) {
+          const node = document.getElementById(id)
+          
+          if (!node.value) {
+            return
+          }
+
+          const fieldIsNumber = numberFieldIDs.includes(id)
+          requestBody[id] = fieldIsNumber ? Number(node.value) : node.value
+        }
+
+        const body = JSON.stringify(requestBody)
+        const headers = { 'Content-Type': 'application/json' }
+
+        fetch(`/api/books/${bookID}`, { body, headers, method: 'PUT' })
+          .then(response => response.json())
+          .then(book => {
+            alert('✅ Book updated!')
+            location.href = backPath
+          })
+          .catch(() => alert(`⛔️ Error`))
+      }
+
+      function showBook(book) {
+        for (const id of ['title', 'author', 'author_birth_year', 'author_death_year', 'url']) {
+          const node = document.getElementById(id)
+          node.value = book[id]
+        }
+      }
+
+      fetch('/api/books/' + bookID)
+        .then(response => response.json())
+        .then(book => showBook(book))
+    </script>
+  </body>
+</html>

@@ -1,0 +1,134 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Readwell</title>
+    <style>
+      body {
+        font-family: Georgia, serif;
+        margin: auto;
+        max-width: 768px;
+        text-align: center;
+      }
+
+      p {
+        text-align: left;
+      }
+
+      #book {
+        border: 2px solid grey;
+        display: flex;
+        flex-direction: column;
+        height: 300px;
+        justify-content: space-around;
+        margin: 20px auto;
+        padding: 20px;
+        width: 200px;
+      }
+
+      #edit-link {
+        display: block;
+        margin-bottom: 20px;
+      }
+
+      #more {
+        margin-bottom: 20px;
+      }
+
+      #read-link {
+        display: block;
+        font-size: 200%;
+        margin-bottom: 20px;
+      }
+
+      #title {
+        font-size: 150%;
+      }
+
+      .delete-button {
+        background: white;
+        border: 1px solid red;
+        border-radius: 4px;
+        color: red;
+        display: block;
+        margin: 20px auto;
+        outline: none;
+      }
+
+      .delete-button:active,
+      .delete-button:focus {
+        background: red;
+        color: white;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="book">
+      <!-- The book will go here. -->
+    </div>
+
+    <div id="read">
+      <!-- A "Read now!" link will go here. -->
+    </div>
+
+    <div id="more">
+      <!-- The "More by this author" link will go here. -->
+    </div>
+
+    <a id="edit-link">Edit</a>
+
+    <button class="delete-button" onclick="deleteBook()">Delete</button>
+
+    <a href="/">&lt; Back</a>
+
+    <script>
+      const url = location.href
+      const urlParts = url.split('/')
+      const bookID = urlParts[urlParts.length - 1]
+
+      const editLinkNode = document.getElementById('edit-link')
+      editLinkNode.href = `/books/${bookID}/edit`
+
+      function deleteBook() {
+        fetch(`/api/books/${bookID}`, { method: 'DELETE' })
+          .then(response => {
+            if (response.status === 204) {
+              alert('✅ Deleted!')
+              location.href = '/'
+            } else {
+              alert(`⛔️ Error: ${response.status}`)
+            }
+          })
+      }
+
+      function showBook(book) {
+        const bookNode = document.getElementById('book')
+
+        bookNode.innerHTML = `
+          <span id="title">${book.title}</span>
+          <span id="author">${book.author}</span>
+        `
+
+        const readNode = document.getElementById('read')
+
+        readNode.innerHTML = `
+          <a href="${book.url}" id="read-link">Read now!</a>
+        `
+
+        const moreNode = document.getElementById('more')
+
+        moreNode.innerHTML = `
+          <a href="/authors/${book.author}">
+            More by this author
+          </a>
+        `
+      }
+
+      fetch('/api/books/' + bookID)
+        .then(response => response.json())
+        .then(book => showBook(book))
+    </script>
+  </body>
+</html>
