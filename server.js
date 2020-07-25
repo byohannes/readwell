@@ -9,20 +9,51 @@ const uri = process.env.URI
 const port = process.env.PORT || 5000
 const app = express()
 app.use(express.json())
-app.get('/', function (request, response) {
-  const client = new mongodb.MongoClient(uri, {
-    useUnifiedTopology: true,
-    useNewUrlParser: true,
-    useCreateIndex: true,
-  })
+
+app.get('/api/books', function (request, response) {
+  const client = new mongodb.MongoClient(uri)
+
   client.connect(function () {
     const db = client.db('literature')
     const collection = db.collection('books')
-    collection.find().toArray((err, result) => {
-      if (error) {
-        response.status(500).send(error)
+
+    const searchObject = {}
+
+    if (request.query.title) {
+      searchObject.title = request.query.title
+    }
+
+    if (request.query.author) {
+      searchObject.author = request.query.author
+    }
+
+    collection.find(searchObject).toArray(function (error, result) {
+      response.send(error || result)
+      client.close()
+    })
+  })
+})
+
+app.get('/api/books/:id', function (request, response) {
+  const client = new mongodb.MongoClient(uri)
+
+  let id
+  try {
+    id = new mongodb.ObjectID(request.params.id)
+  } catch (error) {
+    response.sendStatus(400)
+    return
+  }
+
+  client.connect(function () {
+    const db = client.db('literature')
+    const collection = db.collection('books')
+
+    collection.findOne({_id: id}, function (error, result) {
+      if (!result) {
+        response.sendStatus(404)
       } else {
-        response.send(result.ops[0])
+        response.send(error || result)
       }
 
       client.close()
@@ -144,6 +175,26 @@ app.put('/api/books/:id', function (request, response) {
       client.close()
     }
   })
+})
+
+app.get('/', function (request, response) {
+  response.sendFile(__dirname + '/index.html')
+})
+
+app.get('/books/new', function (request, response) {
+  response.sendFile(__dirname + '/new-book.html')
+})
+
+app.get('/books/:id', function (request, response) {
+  response.sendFile(__dirname + '/book.html')
+})
+
+app.get('/books/:id/edit', function (request, response) {
+  response.sendFile(__dirname + '/edit-book.html')
+})
+
+app.get('/authors/:name', function (request, response) {
+  response.sendFile(__dirname + '/author.html')
 })
 
 app.listen(port, () => console.log(`Server is listening to ${port}`))
