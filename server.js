@@ -1,7 +1,12 @@
+const dotenv = require('dotenv')
 const express = require('express')
 const mongodb = require('mongodb')
-require('dotenv').config()
+
+const {getPutBodyIsAllowed} = require('./util')
+
+dotenv.config()
 const uri = process.env.URI
+const port = process.env.PORT || 5000
 const app = express()
 app.use(express.json())
 app.get('/', function (request, response) {
@@ -90,7 +95,7 @@ app.put('/api/books/:id', function (request, response) {
     const db = client.db('literature')
     const collection = db.collection('books')
     const {id} = request.params
-    const title = request.body.title?request.body.title:null;
+    const title = request.body.title ? request.body.title : null
     const author = request.body.author
     const author_birth_year = request.body.author_birth_year
     const author_death_year = request.body.author_death_year
@@ -131,9 +136,7 @@ app.put('/api/books/:id', function (request, response) {
           }
         )
       } else {
-        response.send(
-          'Error! please check your data'
-        )
+        response.send('Error! please check your data')
         client.close()
       }
     } else {
@@ -143,5 +146,4 @@ app.put('/api/books/:id', function (request, response) {
   })
 })
 
-const myPort = process.env.PORT || 5000
-app.listen(myPort, () => console.log(`Server is listening to ${myPort}`))
+app.listen(port, () => console.log(`Server is listening to ${port}`))
